@@ -9,6 +9,7 @@
 
 import pygame
 import math
+import copy
 
 from pygame.locals import (RLEACCEL, K_UP, K_DOWN, K_LEFT, K_RIGHT, K_ESCAPE, K_SPACE, KEYDOWN, KEYUP, QUIT)
 from pygame.math import Vector2
@@ -31,6 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.angle = 0
         self.turn_speed = 0
         self.speed = Vector2(0, 0)
+        self.gun = Vector2(0, -10)
 
     def update(self, pressed_keys):
         """updates the location of the sprite every frame if moved by keypress"""
@@ -52,10 +54,10 @@ class Player(pygame.sprite.Sprite):
         self.pos += self.speed  #updates the new player position to a factor of the given speed
         self.rect.center = self.pos     #updates the surface drawing to the new player position
 
-
     def rotate(self):
         """providing the rotation of the acceleration Vector"""
         self.accel.rotate_ip(self.turn_speed) #acceleration Vector is the one moving (speed is just by what factor)
+        self.gun.rotate_ip(self.turn_speed)
         self.angle += self.turn_speed #turn to a new angle as key is held down
         #this bit allows you to just go round and round in circles
         if self.angle > 360:
@@ -65,8 +67,11 @@ class Player(pygame.sprite.Sprite):
         self.surf = pygame.transform.rotate(self.surf_copy, -self.angle)
         self.rect = self.surf.get_rect(center=self.rect.center)
 
-    def shoot(self):
-        bullet = Bullet(self.pos.x, self.pos.y)
+    def get_gun(self):
+        return copy.deepcopy(self.gun)
+
+    def shoot(self, gun):
+        bullet = Bullet(self.pos.x, self.pos.y, gun)
         all_sprites.add(bullet)
         bullets_list.add(bullet)
 
@@ -82,21 +87,37 @@ class Player(pygame.sprite.Sprite):
             self.pos.y = 0
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, gun):
         super(Bullet, self).__init__()
         self.surf = pygame.Surface((5, 5))
         self.surf.fill((255, 255, 255))
         self.rect = self.surf.get_rect()
-        self.speed = Vector2(0, -max_speed)
-        self.pos = Vector2(x, y)
+        self.pos = Vector2(x, y) #let's start in the middle of the screen
+        self.speed = Vector2(0, 0)
+        self.accel = gun
 
     def update(self):
+        self.speed += self.accel
         self.pos += self.speed
         self.rect.center = self.pos
         if self.pos.x > screen_width or self.pos.x < 0:
             self.kill()
         if self.pos.y > screen_height or self.pos.y <= 0:
             self.kill()
+        if self.speed.length() > 5:
+            self.speed.scale_to_length(5)
+
+    def rotate(self):
+        """providing the rotation of the acceleration Vector"""
+        self.accel.rotate_ip(self.turn_speed) #acceleration Vector is the one moving (speed is just by what factor)
+        self.angle += self.turn_speed #turn to a new angle as key is held down
+        #this bit allows you to just go round and round in circles
+        if self.angle > 360:
+            self.angle -= 360
+        elif self.angle < 0:
+            self.angle += 360
+        self.surf = pygame.transform.rotate(self.surf_copy, -self.angle)
+        self.rect = self.surf.get_rect(center=self.rect.center)
 
 pygame.init()
 
@@ -120,20 +141,19 @@ while running:
             running = False
 
         if event.type == KEYDOWN and event.key == K_SPACE:
-            player.shoot()
+            gun = player.get_gun()
+            player.shoot(gun)
 
     #player movement
     pressed_keys = pygame.key.get_pressed()
     player.screen_wrap()
-    player.update(pressed_keys)
     bullets_list.update()
+    player.update(pressed_keys)
+
 
     screen.fill((0, 0, 0)) #black
 
     for each in all_sprites:
-        screen.blit(each.surf, each.rect)
-
-    for each in bullets_list:
         screen.blit(each.surf, each.rect)
 
     pygame.display.flip()
