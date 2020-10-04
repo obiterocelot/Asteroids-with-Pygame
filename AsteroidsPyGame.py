@@ -10,6 +10,7 @@
 import pygame
 import math
 import copy
+import random
 
 from pygame.locals import (RLEACCEL, K_UP, K_DOWN, K_LEFT, K_RIGHT, K_ESCAPE, K_SPACE, KEYDOWN, KEYUP, QUIT)
 from pygame.math import Vector2
@@ -23,8 +24,8 @@ class Player(pygame.sprite.Sprite):
     """this class defines the attributes of your controlable sprite"""
     def __init__(self):
         super(Player, self).__init__()
-        self.surf = pygame.Surface((70, 50))
-        pygame.draw.polygon(self.surf, (50, 120, 180), ((35, 0), (0, 35), (70, 35)))
+        self.surf = pygame.Surface((20, 25))
+        pygame.draw.polygon(self.surf, (50, 120, 180), ((10, 0), (0, 25), (20, 25)))
         self.surf_copy = self.surf
         self.rect = self.surf.get_rect()
         self.pos = Vector2(screen_width / 2, screen_height / 2) #let's start in the middle of the screen
@@ -32,7 +33,7 @@ class Player(pygame.sprite.Sprite):
         self.angle = 0
         self.turn_speed = 0
         self.speed = Vector2(0, 0)
-        self.gun = Vector2(0, -10)
+        self.gun_accel = Vector2(0, -10)    #creation of the ship's gun
 
     def update(self, pressed_keys):
         """updates the location of the sprite every frame if moved by keypress"""
@@ -57,22 +58,25 @@ class Player(pygame.sprite.Sprite):
     def rotate(self):
         """providing the rotation of the acceleration Vector"""
         self.accel.rotate_ip(self.turn_speed) #acceleration Vector is the one moving (speed is just by what factor)
-        self.gun.rotate_ip(self.turn_speed)
+        self.gun_accel.rotate_ip(self.turn_speed)
         self.angle += self.turn_speed #turn to a new angle as key is held down
         #this bit allows you to just go round and round in circles
         if self.angle > 360:
             self.angle -= 360
         elif self.angle < 0:
             self.angle += 360
+        #transforms the ship sprite
         self.surf = pygame.transform.rotate(self.surf_copy, -self.angle)
         self.rect = self.surf.get_rect(center=self.rect.center)
 
-    def get_gun(self):
-        return copy.deepcopy(self.gun)
+    def get_gun_vec(self):
+        """pull a copy of the gun vector on command"""
+        return copy.deepcopy(self.gun_accel)    #this way the bullets wont turn as the ship turns
 
-    def shoot(self, gun):
-        bullet = Bullet(self.pos.x, self.pos.y, gun)
-        all_sprites.add(bullet)
+    def shoot(self, accel):
+        """spawning your bullets"""
+        bullet = Bullet(self.pos.x, self.pos.y, accel)
+        all_sprites.add(bullet) #and adding them to the list
         bullets_list.add(bullet)
 
     def screen_wrap(self):
@@ -87,37 +91,49 @@ class Player(pygame.sprite.Sprite):
             self.pos.y = 0
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y, gun):
+    """this class defines the bullets that your controlable sprite fires"""
+    def __init__(self, x, y, accel):
         super(Bullet, self).__init__()
         self.surf = pygame.Surface((5, 5))
         self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect()
+        self.rect = self.surf.get_rect(center=(100, 100))
         self.pos = Vector2(x, y) #let's start in the middle of the screen
-        self.speed = Vector2(0, 0)
-        self.accel = gun
+        self.accel = accel #this is the pulled number from the ship's gun vector. Find this pull on the space key command
 
     def update(self):
-        self.speed += self.accel
-        self.pos += self.speed
+        """updates the location of the sprite every frame. Incl kill command"""
+        self.pos += self.accel
         self.rect.center = self.pos
+        #kill the bullet once off screen to keep game slick
         if self.pos.x > screen_width or self.pos.x < 0:
             self.kill()
         if self.pos.y > screen_height or self.pos.y <= 0:
             self.kill()
-        if self.speed.length() > 5:
-            self.speed.scale_to_length(5)
+        if self.accel.length() > max_speed -1:
+            self.accel.scale_to_length(max_speed -1)
 
-    def rotate(self):
-        """providing the rotation of the acceleration Vector"""
-        self.accel.rotate_ip(self.turn_speed) #acceleration Vector is the one moving (speed is just by what factor)
-        self.angle += self.turn_speed #turn to a new angle as key is held down
-        #this bit allows you to just go round and round in circles
-        if self.angle > 360:
-            self.angle -= 360
-        elif self.angle < 0:
-            self.angle += 360
-        self.surf = pygame.transform.rotate(self.surf_copy, -self.angle)
-        self.rect = self.surf.get_rect(center=self.rect.center)
+class Asteroid(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Asteroid, self).__init__()
+        self.surf = pygame.Surface((50, 50))
+        pygame.draw.circle(self.surf, (255, 192, 203), (25, 25), 25, 2)
+        self.rect = self.surf.get_rect()
+        self.pos = Vector2(random.randint(0, screen_width), random.randint(0, screen_height)) #let's start in the middle of the screen
+        self.speed = Vector2(0, -5)
+
+    def update(self):
+        self.pos += self.speed
+        self.rect.center = self.pos
+
+        #screen wrap rules below
+        if self.pos.x > screen_width:
+            self.pos.x = 0
+        if self.pos.x < 0:
+            self.pos.x = screen_width
+        if self.pos.y <= 0:
+            self.pos.y = screen_height
+        if self.pos.y > screen_height:
+            self.pos.y = 0
 
 pygame.init()
 
@@ -125,8 +141,13 @@ clock = pygame.time.Clock()
 
 screen = pygame.display.set_mode((screen_width, screen_height))
 
+addasteroid = pygame.USEREVENT +1
+pygame.time.set_timer(addasteroid, 2000)
+maximum_enemies = 5
+
 player = Player()
 bullets_list = pygame.sprite.Group()
+asteroids = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -141,15 +162,21 @@ while running:
             running = False
 
         if event.type == KEYDOWN and event.key == K_SPACE:
-            gun = player.get_gun()
+            gun = player.get_gun_vec()
             player.shoot(gun)
+
+        if event.type == addasteroid:
+            if len(asteroids) < maximum_enemies:
+                new_asteroid = Asteroid()
+                asteroids.add(new_asteroid)
+                all_sprites.add(new_asteroid)
 
     #player movement
     pressed_keys = pygame.key.get_pressed()
     player.screen_wrap()
     bullets_list.update()
     player.update(pressed_keys)
-
+    asteroids.update()
 
     screen.fill((0, 0, 0)) #black
 
