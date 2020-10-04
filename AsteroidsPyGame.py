@@ -119,10 +119,11 @@ class Asteroid(pygame.sprite.Sprite):
         pygame.draw.circle(self.surf, (255, 192, 203), (25, 25), 25, 2)
         self.rect = self.surf.get_rect()
         self.pos = Vector2(random.randint(0, screen_width), random.randint(0, screen_height)) #let's start in the middle of the screen
-        self.speed = Vector2(0, -5)
+        self.accel = Vector2(0, -1)
+        self.accel.rotate_ip(random.randint(0, 360))
 
     def update(self):
-        self.pos += self.speed
+        self.pos += self.accel
         self.rect.center = self.pos
 
         #screen wrap rules below
