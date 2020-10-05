@@ -166,6 +166,8 @@ pygame.init()
 
 clock = pygame.time.Clock()
 
+score = 0
+
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 addasteroid = pygame.USEREVENT +1
@@ -226,7 +228,7 @@ while running:
 
     asteroid_sml_hit = pygame.sprite.groupcollide(asteroids_sml, bullets_list, True, pygame.sprite.collide_circle)
     for hit in asteroid_sml_hit:
-        hit.kill()
+        score += 1
 
     #player movement
     pressed_keys = pygame.key.get_pressed()
@@ -240,6 +242,10 @@ while running:
 
     for each in all_sprites:
         screen.blit(each.surf, each.rect)
+
+    font = pygame.font.Font(None, 74)
+    text = font.render(str(score), 1, (255, 255, 255))
+    screen.blit(text, (250,10))
 
     pygame.display.flip()
 
