@@ -112,11 +112,11 @@ class Bullet(pygame.sprite.Sprite):
         if self.accel.length() > max_speed -1:
             self.accel.scale_to_length(max_speed -1)
 
-class Asteroid(pygame.sprite.Sprite):
+class Asteroid_BIG(pygame.sprite.Sprite):
     def __init__(self):
-        super(Asteroid, self).__init__()
-        self.surf = pygame.Surface((50, 50))
-        pygame.draw.circle(self.surf, (255, 192, 203), (25, 25), 25, 2)
+        super(Asteroid_BIG, self).__init__()
+        self.surf = pygame.Surface((80, 80))
+        pygame.draw.circle(self.surf, (255, 192, 203), (40, 40), 40, 2)
         self.rect = self.surf.get_rect()
         self.pos = Vector2(random.randint(0, screen_width), random.randint(0, screen_height)) #let's start in the middle of the screen
         self.accel = Vector2(0, -1)
@@ -136,6 +136,22 @@ class Asteroid(pygame.sprite.Sprite):
         if self.pos.y > screen_height:
             self.pos.y = 0
 
+    def death_pos(self):
+        return copy.deepcopy(self.pos)
+
+    def death_accel(self):
+        return copy.deepcopy(self.accel)
+
+class Asteroid_MED(Asteroid_BIG, pygame.sprite.Sprite):
+    def __init__(self, accel, death):
+        super(Asteroid_MED, self).__init__()
+        self.surf = pygame.Surface((40, 40))
+        pygame.draw.circle(self.surf, (0, 255, 0), (20, 20), 20, 2)
+        self.rect = self.surf.get_rect()
+        self.pos = death
+        self.accel = accel
+        self.accel.rotate_ip(random.randint(0, 180))
+
 pygame.init()
 
 clock = pygame.time.Clock()
@@ -148,7 +164,8 @@ maximum_enemies = 5
 
 player = Player()
 bullets_list = pygame.sprite.Group()
-asteroids = pygame.sprite.Group()
+asteroids_big = pygame.sprite.Group()
+all_asteroids = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -167,17 +184,29 @@ while running:
             player.shoot(gun)
 
         if event.type == addasteroid:
-            if len(asteroids) < maximum_enemies:
-                new_asteroid = Asteroid()
-                asteroids.add(new_asteroid)
+            if len(asteroids_big) < maximum_enemies and len(all_asteroids) < 7:
+                new_asteroid = Asteroid_BIG()
+                asteroids_big.add(new_asteroid)
+                all_asteroids.add(new_asteroid)
                 all_sprites.add(new_asteroid)
+
+    asteroid_big_hit = pygame.sprite.groupcollide(asteroids_big, bullets_list, True, pygame.sprite.collide_circle)
+    for hit in asteroid_big_hit:
+        death = hit.death_pos()
+        accel = hit.death_accel()
+        new_asteroid_1 = Asteroid_MED(accel, death)
+        new_asteroid_2 = Asteroid_MED(Vector2(0, -1), Vector2(50, 50))
+        all_asteroids.add(new_asteroid_1, new_asteroid_2)
+        all_sprites.add(new_asteroid_1, new_asteroid_2)
+        hit.kill()
 
     #player movement
     pressed_keys = pygame.key.get_pressed()
     player.screen_wrap()
     bullets_list.update()
     player.update(pressed_keys)
-    asteroids.update()
+    asteroids_big.update()
+    all_asteroids.update()
 
     screen.fill((0, 0, 0)) #black
 
