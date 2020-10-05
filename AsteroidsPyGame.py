@@ -150,7 +150,17 @@ class Asteroid_MED(Asteroid_BIG, pygame.sprite.Sprite):
         self.rect = self.surf.get_rect()
         self.pos = death
         self.accel = accel
-        self.accel.rotate_ip(random.randint(0, 180))
+        self.accel.rotate_ip(random.randint(0, 90))
+
+class Asteroid_SML(Asteroid_BIG, pygame.sprite.Sprite):
+    def __init__(self, accel, death):
+        super(Asteroid_SML, self).__init__()
+        self.surf = pygame.Surface((20, 20))
+        pygame.draw.circle(self.surf, (255,255,153), (10, 10), 10, 2)
+        self.rect = self.surf.get_rect()
+        self.pos = death
+        self.accel = accel
+        self.accel.rotate_ip(random.randint(0, 90))
 
 pygame.init()
 
@@ -165,6 +175,8 @@ maximum_enemies = 5
 player = Player()
 bullets_list = pygame.sprite.Group()
 asteroids_big = pygame.sprite.Group()
+asteroids_med = pygame.sprite.Group()
+asteroids_sml = pygame.sprite.Group()
 all_asteroids = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
@@ -193,11 +205,27 @@ while running:
     asteroid_big_hit = pygame.sprite.groupcollide(asteroids_big, bullets_list, True, pygame.sprite.collide_circle)
     for hit in asteroid_big_hit:
         death = hit.death_pos()
-        accel = hit.death_accel()
-        new_asteroid_1 = Asteroid_MED(accel, death)
-        new_asteroid_2 = Asteroid_MED(Vector2(0, -1), Vector2(50, 50))
+        accel = copy.deepcopy(hit.death_accel())
+        accel2 = copy.deepcopy(hit.death_accel())
+        new_asteroid_1 = Asteroid_MED(accel, Vector2(death))
+        new_asteroid_2 = Asteroid_MED(accel2, Vector2(death))
         all_asteroids.add(new_asteroid_1, new_asteroid_2)
+        asteroids_med.add(new_asteroid_1, new_asteroid_2)
         all_sprites.add(new_asteroid_1, new_asteroid_2)
+
+    asteroid_med_hit = pygame.sprite.groupcollide(asteroids_med, bullets_list, True, pygame.sprite.collide_circle)
+    for hit in asteroid_med_hit:
+        death = hit.death_pos()
+        accel = copy.deepcopy(hit.death_accel())
+        accel2 = copy.deepcopy(hit.death_accel())
+        new_asteroid_1 = Asteroid_SML(accel, Vector2(death))
+        new_asteroid_2 = Asteroid_SML(accel2, Vector2(death))
+        all_asteroids.add(new_asteroid_1, new_asteroid_2)
+        asteroids_sml.add(new_asteroid_1, new_asteroid_2)
+        all_sprites.add(new_asteroid_1, new_asteroid_2)
+
+    asteroid_sml_hit = pygame.sprite.groupcollide(asteroids_sml, bullets_list, True, pygame.sprite.collide_circle)
+    for hit in asteroid_sml_hit:
         hit.kill()
 
     #player movement
