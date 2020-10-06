@@ -112,6 +112,32 @@ class Bullet(pygame.sprite.Sprite):
         if self.accel.length() > max_speed -1:
             self.accel.scale_to_length(max_speed -1)
 
+class Asteroid(pygame.sprite.Sprite):
+    def __init__(self, surf_size, circle_size, color, position, acceleration, speed):
+        super(Asteroid, self).__init__()
+        self.surf = pygame.Surface(surf_size)
+        pygame.draw.circle(self.surf, (color), (circle_size), circle_size[0], 2)
+        self.rect = self.surf.get_rect()
+        self.pos = position
+        self.accel = acceleration
+        self.speed = Vector2(0, -1)
+        self.max_speed = speed
+
+    def update(self):
+        self.speed += self.accel
+        self.pos += self.speed
+        self.rect.center = self.pos
+
+        #screen wrap rules below
+        if self.pos.x > screen_width:
+            self.pos.x = 0
+        if self.pos.x < 0:
+            self.pos.x = screen_width
+        if self.pos.y <= 0:
+            self.pos.y = screen_height
+        if self.pos.y > screen_height:
+            self.pos.y = 0
+
 class Asteroid_BIG(pygame.sprite.Sprite):
     def __init__(self):
         super(Asteroid_BIG, self).__init__()
@@ -121,9 +147,16 @@ class Asteroid_BIG(pygame.sprite.Sprite):
         self.pos = Vector2(random.randint(0, screen_width), random.randint(0, screen_height)) #let's start in the middle of the screen
         self.accel = Vector2(0, -1)
         self.accel.rotate_ip(random.randint(0, 360))
+        self.speed = Vector2(0, -1)
+        self.max_speed = 1
 
     def update(self):
-        self.pos += self.accel
+        self.speed += self.accel
+
+        if self.speed.length() > self.max_speed:
+            self.speed.scale_to_length(self.max_speed)
+
+        self.pos += self.speed
         self.rect.center = self.pos
 
         #screen wrap rules below
@@ -243,9 +276,9 @@ while running:
     for each in all_sprites:
         screen.blit(each.surf, each.rect)
 
-    font = pygame.font.Font(None, 74)
+    font = pygame.font.Font(None, 20)
     text = font.render(str(score), 1, (255, 255, 255))
-    screen.blit(text, (250,10))
+    screen.blit(text, (10, 10))
 
     pygame.display.flip()
 
