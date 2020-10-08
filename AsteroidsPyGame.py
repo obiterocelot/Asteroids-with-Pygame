@@ -199,6 +199,19 @@ class Asteroid_SML(Asteroid):
         super(Asteroid_SML, self).__init__(surf_size, circle_size, color, position, acceleration, speed)
         self.accel.rotate_ip(random.randint(0, 90))
 
+def asteroid_hit(death, accel, new_astsize, new_list, counter=0):
+    """definition of what happens at an asteroid death and split. Small Asteroid is different"""
+    if counter < 2:
+        new_asteroid = new_astsize(accel, Vector2(death))   #essentially, creates a new list from the death accel pulled before def is called
+        all_asteroids.add(new_asteroid) #... and adds it to the necessary lists
+        new_list.add(new_asteroid)
+        all_sprites.add(new_asteroid)
+        accel2 = copy.deepcopy(accel)   #makes a copy of the accel (else both asteroids would use the same Vector)
+        counter += 1    #only needs to happen twice
+        asteroid_hit(death, accel2, new_astsize, new_list, counter) #and does it again
+    else:
+        return
+
 pygame.init()
 
 clock = pygame.time.Clock() #required for events that need a timer
@@ -208,7 +221,7 @@ score = 0 #the first set up of the score
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 addasteroid = pygame.USEREVENT +1
-pygame.time.set_timer(addasteroid, 2000)
+pygame.time.set_timer(addasteroid, 2000) #creation of the event to add a Big Asteroid
 maximum_enemies = 5 #fill in figure. TO ADJUST LATER
 
 #group lists
@@ -245,29 +258,22 @@ while running:
                 all_asteroids.add(new_asteroid)
                 all_sprites.add(new_asteroid)
 
+    #definiting hits of asteroids by bullets
+    """BIG"""
     asteroid_big_hit = pygame.sprite.groupcollide(asteroids_big, bullets_list, True, pygame.sprite.collide_circle)
-    """TO REWRITE""" #but basically the current rules for spawning the smaller asteroids on a collision
     for hit in asteroid_big_hit:
-        death = hit.death_pos()
+        death = hit.death_pos() #had to pull death and accel before def. Pulling hit would turn it into a list instead of a class
         accel = copy.deepcopy(hit.death_accel())
-        accel2 = copy.deepcopy(hit.death_accel())
-        new_asteroid_1 = Asteroid_MED(accel, Vector2(death))
-        new_asteroid_2 = Asteroid_MED(accel2, Vector2(death))
-        all_asteroids.add(new_asteroid_1, new_asteroid_2)
-        asteroids_med.add(new_asteroid_1, new_asteroid_2)
-        all_sprites.add(new_asteroid_1, new_asteroid_2)
+        asteroid_hit(death, accel, Asteroid_MED, asteroids_med)
 
+    """MED"""
     asteroid_med_hit = pygame.sprite.groupcollide(asteroids_med, bullets_list, True, pygame.sprite.collide_circle)
     for hit in asteroid_med_hit:
         death = hit.death_pos()
         accel = copy.deepcopy(hit.death_accel())
-        accel2 = copy.deepcopy(hit.death_accel())
-        new_asteroid_1 = Asteroid_SML(accel, Vector2(death))
-        new_asteroid_2 = Asteroid_SML(accel2, Vector2(death))
-        all_asteroids.add(new_asteroid_1, new_asteroid_2)
-        asteroids_sml.add(new_asteroid_1, new_asteroid_2)
-        all_sprites.add(new_asteroid_1, new_asteroid_2)
+        asteroid_hit(death, accel, Asteroid_SML, asteroids_sml)
 
+    """SML"""
     asteroid_sml_hit = pygame.sprite.groupcollide(asteroids_sml, bullets_list, True, pygame.sprite.collide_circle)
     for hit in asteroid_sml_hit:
         score += 1
@@ -277,14 +283,14 @@ while running:
     player.screen_wrap()
     bullets_list.update()
     player.update(pressed_keys)
-    asteroids_big.update()
     all_asteroids.update()
 
     screen.fill((0, 0, 0)) #black
 
-    for each in all_sprites:
+    for each in all_sprites: #drawing everything
         screen.blit(each.surf, each.rect)
 
+    #below is a placeholder for the score
     font = pygame.font.Font(None, 20)
     text = font.render(str(score), 1, (255, 255, 255))
     screen.blit(text, (10, 10))
