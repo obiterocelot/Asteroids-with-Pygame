@@ -13,7 +13,7 @@ import pygame
 import math
 import copy
 from pygame.math import Vector2
-from pygame.locals import (K_UP, K_LEFT, K_RIGHT)
+from pygame.locals import (RLEACCEL, K_UP, K_LEFT, K_RIGHT)
 
 import Bullet
 
@@ -23,6 +23,7 @@ max_speed = 10 #this is the max speed for all sprites - including bullets
 pygame.mixer.init()
 thruster_sound = pygame.mixer.Sound("thrust.wav")
 bullet_sound = pygame.mixer.Sound("fire.wav")
+clock = pygame.time.Clock()
 
 ADDINGEVENT = pygame.USEREVENT +2
 
@@ -30,8 +31,8 @@ class Player(pygame.sprite.Sprite):
     """this class defines the attributes of your controlable sprite"""
     def __init__(self):
         super(Player, self).__init__()
-        self.surf = pygame.Surface((20, 25))
-        pygame.draw.polygon(self.surf, (50, 120, 180), ((10, 0), (0, 25), (20, 25)))
+        self.surf = pygame.image.load("ship.png").convert()
+        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
         self.surf_copy = self.surf
         self.rect = self.surf.get_rect()
         self.accel = Vector2(0, -0.05)  # The acceleration Vector points upwards.

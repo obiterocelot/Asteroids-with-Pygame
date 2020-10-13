@@ -11,6 +11,7 @@
 
 import pygame
 from pygame.math import Vector2
+from pygame.locals import RLEACCEL
 
 screen_width = 800
 screen_height = 600 #placeholder screensize
@@ -20,8 +21,8 @@ class Bullet(pygame.sprite.Sprite):
     """this class defines the bullets that your controlable sprite fires"""
     def __init__(self, x, y, accel):
         super(Bullet, self).__init__()
-        self.surf = pygame.Surface((5, 5))
-        self.surf.fill((255, 255, 255))
+        self.surf = pygame.image.load("bullet.png").convert()
+        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
         self.rect = self.surf.get_rect(center=(100, 100))
         self.pos = Vector2(x, y) #let's start in the middle of the screen
         self.accel = accel #this is the pulled number from the ship's gun vector. Find this pull on the space key command

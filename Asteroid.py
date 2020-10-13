@@ -12,6 +12,7 @@
 import pygame
 import random
 from pygame.math import Vector2
+from pygame.locals import RLEACCEL
 import copy
 
 screen_width = 800
@@ -19,11 +20,11 @@ screen_height = 600 #placeholder screensize
 
 class Asteroid(pygame.sprite.Sprite):
     """Asteroid parent class"""
-    def __init__(self, surf_size, circle_size, color, position, acceleration, speed):
+    def __init__(self, image, position, acceleration, speed):
         #all asteroids have the same features, but different sizes of those features. The children classes define those sizes and any extra features
         super(Asteroid, self).__init__()
-        self.surf = pygame.Surface(surf_size)
-        pygame.draw.circle(self.surf, (color), (circle_size), circle_size[0], 2)
+        self.surf = pygame.image.load(image).convert()
+        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
         self.rect = self.surf.get_rect()
         self.pos = position
         self.accel = acceleration
@@ -60,13 +61,11 @@ class Asteroid(pygame.sprite.Sprite):
 class Asteroid_BIG(Asteroid):
     """Big Asteroid subclass of Asteroid"""
     def __init__(self):
-        surf_size = (80, 80)
-        circle_size = (40, 40)
-        color = (255, 192, 203)
+        image = "asteroid1_L.png"
         position = self.starting_pos() #randomly generated off screen starter.
         acceleration = Vector2(0, -1) #needs a starting accel to turn
         speed = 1
-        super(Asteroid_BIG, self).__init__(surf_size, circle_size, color, position, acceleration, speed) #individually broken down so I can more easily adjust at a later date if need be.
+        super(Asteroid_BIG, self).__init__(image, position, acceleration, speed) #individually broken down so I can more easily adjust at a later date if need be.
         self.accel.rotate_ip(random.randint(0, 360)) #random turn is in children classes so as to give some illusion of momentum.
 
     def starting_pos(self):
@@ -82,25 +81,21 @@ class Asteroid_BIG(Asteroid):
 class Asteroid_MED(Asteroid):
     """Medium Asteroid subclass of Asteroid"""
     def __init__(self, accel, death):
-        surf_size = (40, 40)
-        circle_size = (20, 20)
-        color = (0, 255, 0)
+        image = "asteroid1_M.png"
         position = death
         acceleration = accel
         speed = 2
-        super(Asteroid_MED, self).__init__(surf_size, circle_size, color, position, acceleration, speed)
+        super(Asteroid_MED, self).__init__(image, position, acceleration, speed)
         self.accel.rotate_ip(random.randint(0, 90)) #can only turn a maximum of 90 degrees from the direction it was going.
 
 class Asteroid_SML(Asteroid):
     """Small Asteroid subclass of Asteroid"""
     def __init__(self, accel, death):
-        surf_size = (20, 20)
-        circle_size = (10, 10)
-        color = (255,255,153)
+        image = "asteroid1_S.png"
         position = death
         acceleration = accel
         speed = 2.5 #3 is a bit fast
-        super(Asteroid_SML, self).__init__(surf_size, circle_size, color, position, acceleration, speed)
+        super(Asteroid_SML, self).__init__(image, position, acceleration, speed)
         self.accel.rotate_ip(random.randint(0, 90))
 
 def main():
