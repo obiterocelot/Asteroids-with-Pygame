@@ -50,9 +50,9 @@ def setup():
 
         if start:
             screen.fill((0, 0, 0))
-            font = pygame.font.Font(None, 100)
-            text = font.render("ASTEROIDS", 1, (255, 255, 255))
-            screen.blit(text, (50, 100))
+            surf = pygame.image.load("gamestart.png")
+            new_surf = pygame.transform.scale(surf, (screen_width+2, screen_height+2))
+            screen.blit(new_surf, (-2, -2))
             pygame.display.update()
             clock.tick(15)
 
@@ -199,12 +199,9 @@ def game_over():
 
         if end:
             screen.fill((0, 0, 0))
-            font1 = pygame.font.Font(None, 100)
-            font2 = pygame.font.Font(None, 50)
-            text1 = font1.render("GAME OVER.", 1, (255, 255, 255))
-            text2 = font2.render("click to play again", 1, (255, 255, 255))
-            screen.blit(text1, (50, 100))
-            screen.blit(text2, (50, 250))
+            surf = pygame.image.load("gameover.png")
+            new_surf = pygame.transform.scale(surf, (screen_width+10, screen_height))
+            screen.blit(new_surf, (-10, -1))
             pygame.display.update()
             clock.tick(15)
 
