@@ -16,23 +16,45 @@ from Asteroid import (Asteroid_BIG, Asteroid_MED, Asteroid_SML)
 import Bullet
 from Player import Player
 
-from pygame.locals import (RLEACCEL, K_UP, K_DOWN, K_LEFT, K_RIGHT, K_ESCAPE, K_SPACE, KEYDOWN, KEYUP, QUIT)
+from pygame.locals import (RLEACCEL, K_UP, K_DOWN, K_LEFT, K_RIGHT, K_ESCAPE, K_SPACE, KEYDOWN, KEYUP, QUIT, MOUSEBUTTONDOWN)
 from pygame.math import Vector2
 
 screen_width = 800
 screen_height = 600 #placeholder screensize
 max_speed = 10 #this is the max speed for all sprites - including bullets
 ADDINGEVENT = pygame.USEREVENT +2
+clock = pygame.time.Clock()
+screen = pygame.display.set_mode((screen_width, screen_height))
 
-def main():
+def setup():
     pygame.init()
 
-    clock = pygame.time.Clock() #required for events that need a timer
+    start = True
+    while start:
+
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+                    start = False
+            elif event.type == QUIT:
+                pygame.quit()
+                start = False
+            if event.type == MOUSEBUTTONDOWN:
+                start = False
+
+        if start:
+            screen.fill((0, 0, 0))
+            font = pygame.font.Font(None, 100)
+            text = font.render("ASTEROIDS", 1, (255, 255, 255))
+            screen.blit(text, (50, 100))
+            pygame.display.update()
+            clock.tick(15)
+
+def main():
 
     score = 0 #the first set up of the score
     lives = 3 #first step of setting up a life counter
-
-    screen = pygame.display.set_mode((screen_width, screen_height))
 
     addasteroid = pygame.USEREVENT +1
     pygame.time.set_timer(addasteroid, 2000) #creation of the event to add a Big Asteroid
@@ -57,8 +79,10 @@ def main():
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
+                    pygame.quit()
                     running = False
             elif event.type == QUIT:
+                pygame.quit()
                 running = False
 
             if event.type == KEYDOWN and event.key == K_SPACE:
@@ -119,32 +143,63 @@ def main():
             all_sprites.add(player)
             player.immune(player_list)
 
-    #player movement
-        pressed_keys = pygame.key.get_pressed()
-        player.screen_wrap()
-        bullets_list.update()
-        player.update(pressed_keys)
-        all_asteroids.update()
+        if lives == 0:
+            running = False
 
-        screen.fill((0, 0, 0)) #black
+        if running:
+            #player movement
+            pressed_keys = pygame.key.get_pressed()
+            player.screen_wrap()
+            bullets_list.update()
+            player.update(pressed_keys)
+            all_asteroids.update()
 
-        for each in all_sprites: #drawing everything
-            screen.blit(each.surf, each.rect)
+            screen.fill((0, 0, 0)) #black
+
+            for each in all_sprites: #drawing everything
+                screen.blit(each.surf, each.rect)
 
     #below is a placeholder for the score
-        font = pygame.font.Font(None, 20)
-        text = font.render(str(score), 1, (255, 255, 255))
-        screen.blit(text, (10, 10))
+            font = pygame.font.Font(None, 20)
+            text = font.render(str(score), 1, (255, 255, 255))
+            screen.blit(text, (10, 10))
 
     #placeholder for lives
-        font = pygame.font.Font(None, 20)
-        text = font.render(str(lives), 1, (255, 255, 255))
-        screen.blit(text, (40, 10))
+            font = pygame.font.Font(None, 20)
+            text = font.render(str(lives), 1, (255, 255, 255))
+            screen.blit(text, (40, 10))
 
+            pygame.display.flip()
 
-        pygame.display.flip()
+            clock.tick(60)
 
-        clock.tick(60)
+def game_over():
+    end = True
+    while end:
 
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+                    end = False
+            elif event.type == QUIT:
+                pygame.quit()
+                end = False
+            if event.type == MOUSEBUTTONDOWN:
+                main()
+
+        if end:
+            screen.fill((0, 0, 0))
+            font1 = pygame.font.Font(None, 100)
+            font2 = pygame.font.Font(None, 50)
+            text1 = font1.render("GAME OVER.", 1, (255, 255, 255))
+            text2 = font2.render("click to play again", 1, (255, 255, 255))
+            screen.blit(text1, (50, 100))
+            screen.blit(text2, (50, 250))
+            pygame.display.update()
+            clock.tick(15)
+
+setup()
 main()
+game_over()
 pygame.quit()

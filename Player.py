@@ -42,7 +42,7 @@ class Player(pygame.sprite.Sprite):
     def immune(self, list1):
         """grants immunity for first two seconds on spawn"""
         if self.immunity == True: #checks if there is a player in the player_list
-            pygame.time.set_timer(ADDINGEVENT, 3000)    #if not, it waits 2000 ms before it adds one to the list
+            pygame.time.set_timer(ADDINGEVENT, 2000)    #if not, it waits 2000 ms before it adds one to the list
         if self.immunity == False:
             pygame.time.set_timer(ADDINGEVENT, 0) #when one is added, it resets the counter to 0 so it doesn't keep making new players
 
