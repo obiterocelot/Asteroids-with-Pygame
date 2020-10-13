@@ -24,126 +24,127 @@ screen_height = 600 #placeholder screensize
 max_speed = 10 #this is the max speed for all sprites - including bullets
 ADDINGEVENT = pygame.USEREVENT +2
 
-def asteroid_hit(death, accel, new_astsize, new_list, counter=0):
-    """definition of what happens at an asteroid death and split. Small Asteroid is different"""
-    if counter < 2:
-        new_asteroid = new_astsize(accel, Vector2(death))   #essentially, creates a new list from the death accel pulled before def is called
-        all_asteroids.add(new_asteroid) #... and adds it to the necessary lists
-        new_list.add(new_asteroid)
-        all_sprites.add(new_asteroid)
-        accel2 = copy.deepcopy(accel)   #makes a copy of the accel (else both asteroids would use the same Vector)
-        counter += 1    #only needs to happen twice
-        asteroid_hit(death, accel2, new_astsize, new_list, counter) #and does it again
+def main():
+    pygame.init()
 
-pygame.init()
+    clock = pygame.time.Clock() #required for events that need a timer
 
-clock = pygame.time.Clock() #required for events that need a timer
+    score = 0 #the first set up of the score
+    lives = 3 #first step of setting up a life counter
 
-score = 0 #the first set up of the score
+    screen = pygame.display.set_mode((screen_width, screen_height))
 
-lives = 3 #first step of setting up a life counter
+    addasteroid = pygame.USEREVENT +1
+    pygame.time.set_timer(addasteroid, 2000) #creation of the event to add a Big Asteroid
+    maximum_enemies = 5 #fill in figure. TO ADJUST LATER
 
-screen = pygame.display.set_mode((screen_width, screen_height))
+    #group lists
+    player = Player() #creates a character at the first instance
+    bullets_list = pygame.sprite.Group()
+    asteroids_big = pygame.sprite.Group()
+    asteroids_med = pygame.sprite.Group()
+    asteroids_sml = pygame.sprite.Group()
+    all_asteroids = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group()
+    player_list = pygame.sprite.Group()
+    all_sprites.add(player) #add the player to the all_sprites list so its blitted onto the screen
+    player.immune(player_list)  #grants the character immunity
 
-addasteroid = pygame.USEREVENT +1
-pygame.time.set_timer(addasteroid, 2000) #creation of the event to add a Big Asteroid
-maximum_enemies = 5 #fill in figure. TO ADJUST LATER
-
-#group lists
-player = Player() #creates a character at the first instance
-bullets_list = pygame.sprite.Group()
-asteroids_big = pygame.sprite.Group()
-asteroids_med = pygame.sprite.Group()
-asteroids_sml = pygame.sprite.Group()
-all_asteroids = pygame.sprite.Group()
-all_sprites = pygame.sprite.Group()
-player_list = pygame.sprite.Group()
-all_sprites.add(player) #add the player to the all_sprites list so its blitted onto the screen
-player.immune(player_list)  #grants the character immunity
-
-running = True
-while running:
+    running = True
+    while running:
 
     #quit protocols
-    for event in pygame.event.get():
-        if event.type == KEYDOWN:
-            if event.key == K_ESCAPE:
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    running = False
+            elif event.type == QUIT:
                 running = False
-        elif event.type == QUIT:
-            running = False
 
-        if event.type == KEYDOWN and event.key == K_SPACE:
-            """shooting the gun"""
-            gun = player.get_gun_vec()
-            player.shoot(gun, all_sprites, bullets_list)
+            if event.type == KEYDOWN and event.key == K_SPACE:
+                """shooting the gun"""
+                gun = player.get_gun_vec()
+                player.shoot(gun, all_sprites, bullets_list)
 
-        if event.type == addasteroid:
-            """spawning new asteroids"""
-            if len(asteroids_big) < maximum_enemies and len(all_asteroids) < 7:
-                new_asteroid = Asteroid_BIG()
-                asteroids_big.add(new_asteroid)
-                all_asteroids.add(new_asteroid)
+            if event.type == addasteroid:
+                """spawning new asteroids"""
+                if len(asteroids_big) < maximum_enemies and len(all_asteroids) < 7:
+                    new_asteroid = Asteroid_BIG()
+                    asteroids_big.add(new_asteroid)
+                    all_asteroids.add(new_asteroid)
+                    all_sprites.add(new_asteroid)
+
+            if event.type == ADDINGEVENT:
+                player_list.add(player) #adding the player to the player_list where it will recognise a collision with an asteroid
+                player.immunity = False
+
+        def asteroid_hit(death, accel, new_astsize, new_list, counter=0):
+            """definition of what happens at an asteroid death and split. Small Asteroid is different"""
+            if counter < 2:
+                new_asteroid = new_astsize(accel, Vector2(death))   #essentially, creates a new list from the death accel pulled before def is called
+                all_asteroids.add(new_asteroid) #... and adds it to the necessary lists
+                new_list.add(new_asteroid)
                 all_sprites.add(new_asteroid)
-
-        if event.type == ADDINGEVENT:
-            player_list.add(player) #adding the player to the player_list where it will recognise a collision with an asteroid
-            player.immunity = False
+                accel2 = copy.deepcopy(accel)   #makes a copy of the accel (else both asteroids would use the same Vector)
+                counter += 1    #only needs to happen twice
+                asteroid_hit(death, accel2, new_astsize, new_list, counter) #and does it again
 
     #definiting hits of asteroids by bullets
-    """BIG"""
-    asteroid_big_hit = pygame.sprite.groupcollide(asteroids_big, bullets_list, True, pygame.sprite.collide_circle)
-    for hit in asteroid_big_hit:
-        death = hit.death_pos() #had to pull death and accel before def. Pulling hit would turn it into a list instead of a class
-        accel = copy.deepcopy(hit.death_accel())
-        asteroid_hit(death, accel, Asteroid_MED, asteroids_med)
-        score += 20 #score values taken from original asteroid game
+        """BIG"""
+        asteroid_big_hit = pygame.sprite.groupcollide(asteroids_big, bullets_list, True, pygame.sprite.collide_circle)
+        for hit in asteroid_big_hit:
+            death = hit.death_pos() #had to pull death and accel before def. Pulling hit would turn it into a list instead of a class
+            accel = copy.deepcopy(hit.death_accel())
+            asteroid_hit(death, accel, Asteroid_MED, asteroids_med)
+            score += 20 #score values taken from original asteroid game
 
-    """MED"""
-    asteroid_med_hit = pygame.sprite.groupcollide(asteroids_med, bullets_list, True, pygame.sprite.collide_circle)
-    for hit in asteroid_med_hit:
-        death = hit.death_pos()
-        accel = copy.deepcopy(hit.death_accel())
-        asteroid_hit(death, accel, Asteroid_SML, asteroids_sml)
-        score += 50
+        """MED"""
+        asteroid_med_hit = pygame.sprite.groupcollide(asteroids_med, bullets_list, True, pygame.sprite.collide_circle)
+        for hit in asteroid_med_hit:
+            death = hit.death_pos()
+            accel = copy.deepcopy(hit.death_accel())
+            asteroid_hit(death, accel, Asteroid_SML, asteroids_sml)
+            score += 50
 
-    """SML"""
-    asteroid_sml_hit = pygame.sprite.groupcollide(asteroids_sml, bullets_list, True, pygame.sprite.collide_circle)
-    for hit in asteroid_sml_hit:
-        score += 100
+        """SML"""
+        asteroid_sml_hit = pygame.sprite.groupcollide(asteroids_sml, bullets_list, True, pygame.sprite.collide_circle)
+        for hit in asteroid_sml_hit:
+            score += 100
 
-    player_hit = pygame.sprite.groupcollide(player_list, all_asteroids, True, pygame.sprite.collide_circle)
-    for hit in player_hit:
-        lives -= 1  #takes a life (currently only a counter)
-        player = player.kill()
-        player = Player()
-        all_sprites.add(player)
-        player.immune(player_list)
+        player_hit = pygame.sprite.groupcollide(player_list, all_asteroids, True, pygame.sprite.collide_circle)
+        for hit in player_hit:
+            lives -= 1  #takes a life (currently only a counter)
+            player = player.kill()
+            player = Player()
+            all_sprites.add(player)
+            player.immune(player_list)
 
     #player movement
-    pressed_keys = pygame.key.get_pressed()
-    player.screen_wrap()
-    bullets_list.update()
-    player.update(pressed_keys)
-    all_asteroids.update()
+        pressed_keys = pygame.key.get_pressed()
+        player.screen_wrap()
+        bullets_list.update()
+        player.update(pressed_keys)
+        all_asteroids.update()
 
-    screen.fill((0, 0, 0)) #black
+        screen.fill((0, 0, 0)) #black
 
-    for each in all_sprites: #drawing everything
-        screen.blit(each.surf, each.rect)
+        for each in all_sprites: #drawing everything
+            screen.blit(each.surf, each.rect)
 
     #below is a placeholder for the score
-    font = pygame.font.Font(None, 20)
-    text = font.render(str(score), 1, (255, 255, 255))
-    screen.blit(text, (10, 10))
+        font = pygame.font.Font(None, 20)
+        text = font.render(str(score), 1, (255, 255, 255))
+        screen.blit(text, (10, 10))
 
     #placeholder for lives
-    font = pygame.font.Font(None, 20)
-    text = font.render(str(lives), 1, (255, 255, 255))
-    screen.blit(text, (40, 10))
+        font = pygame.font.Font(None, 20)
+        text = font.render(str(lives), 1, (255, 255, 255))
+        screen.blit(text, (40, 10))
 
 
-    pygame.display.flip()
+        pygame.display.flip()
 
-    clock.tick(60)
+        clock.tick(60)
 
+main()
 pygame.quit()
