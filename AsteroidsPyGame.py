@@ -36,12 +36,13 @@ class Player(pygame.sprite.Sprite):
         self.turn_speed = 0
         self.speed = Vector2(0, 0)
         self.gun_accel = Vector2(0, -10)    #creation of the ship's gun
+        self.immunity = True
 
     def immune(self, list1):
         """grants immunity for first two seconds on spawn"""
-        if len(list1) < 1: #checks if there is a player in the player_list
-            pygame.time.set_timer(ADDINGEVENT, 2000)    #if not, it waits 2000 ms before it adds one to the list
-        elif len(list1) >= 1:
+        if self.immunity == True: #checks if there is a player in the player_list
+            pygame.time.set_timer(ADDINGEVENT, 3000)    #if not, it waits 2000 ms before it adds one to the list
+        if self.immunity == False:
             pygame.time.set_timer(ADDINGEVENT, 0) #when one is added, it resets the counter to 0 so it doesn't keep making new players
 
     def update(self, pressed_keys):
@@ -84,9 +85,10 @@ class Player(pygame.sprite.Sprite):
 
     def shoot(self, accel):
         """spawning your bullets"""
-        bullet = Bullet(self.pos.x, self.pos.y, accel)
-        all_sprites.add(bullet) #and adding them to the list
-        bullets_list.add(bullet)
+        if self.immunity == False:
+            bullet = Bullet(self.pos.x, self.pos.y, accel)
+            all_sprites.add(bullet) #and adding them to the list
+            bullets_list.add(bullet)
 
     def screen_wrap(self):
         """rules for player wrapping around screen (each sprite is a little different)"""
@@ -270,6 +272,7 @@ while running:
 
         if event.type == ADDINGEVENT:
             player_list.add(player) #adding the player to the player_list where it will recognise a collision with an asteroid
+            player.immunity = False
 
     #definiting hits of asteroids by bullets
     """BIG"""
