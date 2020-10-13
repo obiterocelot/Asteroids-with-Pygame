@@ -11,7 +11,8 @@
 import pygame
 import math
 import copy
-import random
+
+from Asteroid import (Asteroid_BIG, Asteroid_MED, Asteroid_SML)
 
 from pygame.locals import (RLEACCEL, K_UP, K_DOWN, K_LEFT, K_RIGHT, K_ESCAPE, K_SPACE, KEYDOWN, KEYUP, QUIT)
 from pygame.math import Vector2
@@ -122,92 +123,6 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
         if self.accel.length() > max_speed -1: #scale to keep a consistent speed. 1 less lower than max speed of ship is a figure found from studies of original asteroids(link above)
             self.accel.scale_to_length(max_speed -1)
-
-class Asteroid(pygame.sprite.Sprite):
-    """Asteroid parent class"""
-    def __init__(self, surf_size, circle_size, color, position, acceleration, speed):
-        #all asteroids have the same features, but different sizes of those features. The children classes define those sizes and any extra features
-        super(Asteroid, self).__init__()
-        self.surf = pygame.Surface(surf_size)
-        pygame.draw.circle(self.surf, (color), (circle_size), circle_size[0], 2)
-        self.rect = self.surf.get_rect()
-        self.pos = position
-        self.accel = acceleration
-        self.speed = Vector2(0, -1) #speed is an increasing upwards momentum. When scaled down by the max_speed, it allows you to set different speeds for the asteroids
-        self.max_speed = speed
-
-    def death_pos(self):    #The asteroid.death_pos and death_accel are necessary figures to spawn the new kinds of asteroids on death
-        """position at moment of collision with Bullet class"""
-        return copy.deepcopy(self.pos)
-
-    def death_accel(self):
-        """acceleration/direction at moment of collision with Bullet class"""
-        return copy.deepcopy(self.accel)
-
-    def update(self):
-        self.speed += self.accel #continue to update accel to a factor of the speed...
-
-        if self.speed.length() > self.max_speed: #then scale it to the max_speed.
-            self.speed.scale_to_length(self.max_speed)
-
-        self.pos += self.speed
-        self.rect.center = self.pos
-
-        #screen wrap rules below allow. +/- 40 allow for smoother transition
-        if self.pos.x > screen_width + 40:
-            self.pos.x = -40
-        if self.pos.x < -40:
-            self.pos.x = screen_width + 40
-        if self.pos.y <= -40:
-            self.pos.y = screen_height + 40
-        if self.pos.y > screen_height + 40:
-            self.pos.y = -40
-
-class Asteroid_BIG(Asteroid):
-    """Big Asteroid subclass of Asteroid"""
-    def __init__(self):
-        surf_size = (80, 80)
-        circle_size = (40, 40)
-        color = (255, 192, 203)
-        position = self.starting_pos() #randomly generated off screen starter.
-        acceleration = Vector2(0, -1) #needs a starting accel to turn
-        speed = 1
-        super(Asteroid_BIG, self).__init__(surf_size, circle_size, color, position, acceleration, speed) #individually broken down so I can more easily adjust at a later date if need be.
-        self.accel.rotate_ip(random.randint(0, 360)) #random turn is in children classes so as to give some illusion of momentum.
-
-    def starting_pos(self):
-        """provides a random off-screen starting position"""
-        #starting positions are split into quadrants. starting_pos randomly generates a point position from each quadrant, then one of the quadrants is randomly selected.
-        left = (random.randint(-80, -40), random.randint(-80, (screen_height + 80))) #quadrants are all the same size off-screen
-        right = (random.randint((screen_width + 40), (screen_width + 80)), random.randint(-80, (screen_height + 80)))
-        top = (random.randint(-80, (screen_width + 80)), random.randint(-80, -40))
-        bottom = (random.randint(-80, (screen_width +80)), random.randint(screen_height + 40, screen_height + 80))
-        list = [left, right, top, bottom] #list of the four quadrants
-        return random.choice(list) #random.choice picks one of the 4 options at random.
-
-class Asteroid_MED(Asteroid):
-    """Medium Asteroid subclass of Asteroid"""
-    def __init__(self, accel, death):
-        surf_size = (40, 40)
-        circle_size = (20, 20)
-        color = (0, 255, 0)
-        position = death
-        acceleration = accel
-        speed = 2
-        super(Asteroid_MED, self).__init__(surf_size, circle_size, color, position, acceleration, speed)
-        self.accel.rotate_ip(random.randint(0, 90)) #can only turn a maximum of 90 degrees from the direction it was going.
-
-class Asteroid_SML(Asteroid):
-    """Small Asteroid subclass of Asteroid"""
-    def __init__(self, accel, death):
-        surf_size = (20, 20)
-        circle_size = (10, 10)
-        color = (255,255,153)
-        position = death
-        acceleration = accel
-        speed = 2.5 #3 is a bit fast
-        super(Asteroid_SML, self).__init__(surf_size, circle_size, color, position, acceleration, speed)
-        self.accel.rotate_ip(random.randint(0, 90))
 
 def asteroid_hit(death, accel, new_astsize, new_list, counter=0):
     """definition of what happens at an asteroid death and split. Small Asteroid is different"""
