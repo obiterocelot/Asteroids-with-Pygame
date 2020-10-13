@@ -5,7 +5,8 @@
 # Created:     15/09/2020
 # Copyright:   (c) sarah 2020
 # Licence:     coding help on Vectors: https://stackoverflow.com/questions/48856922/pygame-how-to-make-sprite-move-in-the-direction-its-facing-with-vectors
-#               Figures on appropriate sizes of sprites etc: http://www.retrogamedeconstructionzone.com/2019/10/asteroids-by-numbers.html
+#              help with structure of game loop: https://pythonprogramming.net/pygame-start-menu-tutorial/
+#              Figures on appropriate sizes of sprites etc: http://www.retrogamedeconstructionzone.com/2019/10/asteroids-by-numbers.html
 #-------------------------------------------------------------------------------
 
 import pygame
@@ -25,9 +26,13 @@ max_speed = 10 #this is the max speed for all sprites - including bullets
 ADDINGEVENT = pygame.USEREVENT +2
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.mixer.init()
+asteroid_sound = pygame.mixer.Sound("bangLarge.wav")
+ship_sound = pygame.mixer.Sound("bangSmall.wav")
 
 def setup():
     pygame.init()
+    pygame.mixer.init()
 
     start = True
     while start:
@@ -106,6 +111,8 @@ def main():
             """definition of what happens at an asteroid death and split. Small Asteroid is different"""
             if counter < 2:
                 new_asteroid = new_astsize(accel, Vector2(death))   #essentially, creates a new list from the death accel pulled before def is called
+                asteroid_sound.set_volume(0.1)
+                asteroid_sound.play()
                 all_asteroids.add(new_asteroid) #... and adds it to the necessary lists
                 new_list.add(new_asteroid)
                 all_sprites.add(new_asteroid)
@@ -138,6 +145,8 @@ def main():
         player_hit = pygame.sprite.groupcollide(player_list, all_asteroids, True, pygame.sprite.collide_circle)
         for hit in player_hit:
             lives -= 1  #takes a life (currently only a counter)
+            ship_sound.set_volume(0.1)
+            ship_sound.play()
             player = player.kill()
             player = Player()
             all_sprites.add(player)

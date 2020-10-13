@@ -20,6 +20,9 @@ import Bullet
 screen_width = 800
 screen_height = 600 #placeholder screensize
 max_speed = 10 #this is the max speed for all sprites - including bullets
+pygame.mixer.init()
+thruster_sound = pygame.mixer.Sound("thrust.wav")
+bullet_sound = pygame.mixer.Sound("fire.wav")
 
 ADDINGEVENT = pygame.USEREVENT +2
 
@@ -57,6 +60,8 @@ class Player(pygame.sprite.Sprite):
             self.rotate()
         #pressing up or down will increase or decrease the player speed by a factor of the acceleration
         if pressed_keys[K_UP]:
+            thruster_sound.set_volume(0.05)
+            thruster_sound.play()
             self.speed += self.accel
 
         #setting a max speed and adjusting the Vector to that max speed
@@ -88,6 +93,8 @@ class Player(pygame.sprite.Sprite):
         """spawning your bullets"""
         if self.immunity == False:
             bullet = Bullet.Bullet(self.pos.x, self.pos.y, accel)
+            bullet_sound.set_volume(0.1)
+            bullet_sound.play()
             list1.add(bullet) #and adding them to the list
             list2.add(bullet)
 
