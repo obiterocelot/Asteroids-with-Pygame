@@ -92,12 +92,11 @@ class Player(pygame.sprite.Sprite):
 
     def shoot(self, accel, list1, list2):
         """spawning your bullets"""
-        if self.immunity == False:
-            bullet = Bullet.Bullet(self.pos.x, self.pos.y, accel)
-            bullet_sound.set_volume(0.1)
-            bullet_sound.play()
-            list1.add(bullet) #and adding them to the list
-            list2.add(bullet)
+        bullet = Bullet.Bullet(self.pos.x, self.pos.y, accel)
+        bullet_sound.set_volume(0.1)
+        bullet_sound.play()
+        list1.add(bullet) #and adding them to the list
+        list2.add(bullet)
 
     def screen_wrap(self):
         """rules for player wrapping around screen (each sprite is a little different)"""
