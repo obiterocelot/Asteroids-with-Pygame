@@ -63,7 +63,7 @@ def main():
 
     addasteroid = pygame.USEREVENT +1
     pygame.time.set_timer(addasteroid, 2000) #creation of the event to add a Big Asteroid
-    maximum_enemies = 5 #fill in figure. TO ADJUST LATER
+    maximum_enemies = 10 #figure just made up
 
     #group lists
     player = Player() #creates a character at the first instance
@@ -168,16 +168,17 @@ def main():
             for each in all_sprites: #drawing everything
                 screen.blit(each.surf, each.rect)
 
-    #below is a placeholder for the score
-            font = pygame.font.Font(None, 20)
+    #score
+            font = pygame.font.Font("Hyperspace Bold.otf", 20)
             text = font.render(str(score), 1, (255, 255, 255))
             screen.blit(text, (10, 10))
 
     #placeholder for lives
-            font = pygame.font.Font(None, 20)
-            text = font.render(str(lives), 1, (255, 255, 255))
-            screen.blit(text, (40, 10))
-
+            life_image = pygame.image.load("ship.png").convert()
+            x = 100
+            for life in range(lives):
+                screen.blit(life_image, (x, 10))
+                x += 20
             pygame.display.flip()
 
             clock.tick(60)
